@@ -48,3 +48,23 @@ export const authMiddleware = async (req, res, next) => {
     });
   }
 };
+
+export const checkAdmin=async(req,res,next)=>{
+  try {
+
+    if(req.user.role !=="ADMIN"){
+      return res.status(403).json({
+        message:"You are not an admin"
+      })
+    }
+
+    next();
+    
+  } catch (error) {
+    console.error(" Some error occured in checking user role")
+    return res.status(501).json({
+      error:"Error occured while checking user role"
+    })
+    
+  }
+}
