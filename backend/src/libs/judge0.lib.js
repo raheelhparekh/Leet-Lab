@@ -6,7 +6,7 @@ export const getJudge0LanguageId = (language) => {
     PYTHON: 71,
     JAVA: 62,
     JAVASCRIPT: 63,
-    CPP: 54,
+    // CPP: 54,
   };
 
   return languageMap[language.toUpperCase()] || null;
@@ -18,7 +18,7 @@ export const submitBatch = async (submissions) => {
     `${process.env.JUDGE0_API_URL}/submissions/batch?base64_encoded=false`,
     { submissions },
   );
-  console.log(`Submission data : ${data}`);
+  console.log(`Submission data : `, data);
 
   return data; // {[token] [token] [token]}
 };
