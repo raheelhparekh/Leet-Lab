@@ -75,7 +75,7 @@ model Submission {
   stderr        String?
   compileOutput String?
   status        String // Wrong Answer, Accepted
-  memmory       String?
+  memory        String?
   time          String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -92,10 +92,11 @@ model TestCaseResult {
   testCase      Int
   passed        Boolean
   stdout        String?
+  stderr        String?
   expected      String
   compileOutput String?
-  staus         String
-  memmory       String
+  status        String
+  memory        String
   time          String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
