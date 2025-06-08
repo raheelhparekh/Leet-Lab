@@ -123,12 +123,12 @@ export const getAllProblems = async (req, res) => {
 };
 
 export const deleteProblem = async (req, res) => {
-  const  problemId  = req.params.id;
+  const problemId = req.params.id;
 
   try {
     const problem = await db.problem.findUnique({
       where: {
-        id:problemId
+        id: problemId,
       },
     });
 
@@ -165,7 +165,7 @@ export const deleteProblem = async (req, res) => {
 };
 
 export const updateProblem = async (req, res) => {
-  const  problemId  = req.params.id;
+  const problemId = req.params.id;
   const {
     title,
     description,
@@ -300,4 +300,35 @@ export const getProblemById = async (req, res) => {
   }
 };
 
-export const getAllSolvedProblemsByUser = async (req, res) => {};
+export const getAllSolvedProblemsByUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const problem = await db.problem.findMany({
+      where: {
+        solvedBy: {
+          some: {
+            userId: userId,
+          },
+        },
+      },
+      include: {
+        solvedBy: {
+          where: {
+            userId: userId,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Solved Problems by user fetched succesfully !!",
+      problem,
+    });
+  } catch (error) {
+    console.error("Error finding all solved problem by user", error);
+    return res.status(500).json({
+      error: "Error finding all solved problem by user",
+    });
+  }
+};
