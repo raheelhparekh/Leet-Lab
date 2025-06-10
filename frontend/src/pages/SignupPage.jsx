@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Code, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { z } from "zod";
 import AuthImagePattern from "../components/AuthImagePattern";
+import { useAuthStore } from "../store/useAuthStore.js";
 
 const SignupSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -14,6 +15,8 @@ const SignupSchema = z.object({
 
 function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const { isSigninUp, signUp } = useAuthStore();
+
   const {
     register,
     handleSubmit,
@@ -23,7 +26,12 @@ function SignupPage() {
   });
 
   const onSubmit = async (data) => {
-    console.log(data);
+    try {
+      await signUp(data);
+      console.log("signup data", data);
+    } catch (error) {
+      console.error("Error submitting data while signin up", error);
+    }
   };
 
   return (
@@ -134,16 +142,16 @@ function SignupPage() {
               <button
                 type="submit"
                 className="btn btn-primary w-full"
-                // disabled={isSigninUp}
+                disabled={isSigninUp}
               >
-                {/* {isSigninUp ? (
+                {isSigninUp ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
                     Loading...
                   </>
                 ) : (
                   "Sign in"
-                )} */}
+                )}
               </button>
             </form>
 

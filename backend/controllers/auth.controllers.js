@@ -128,17 +128,17 @@ export const logout = async (req, res) => {
   }
 };
 
-export const getMe = async (req, res) => {
+export const check = async (req, res) => {
   try {
     return res.status(200).json({
       success: true,
-      message: "user authenticated ",
+      message: "User Authenticated ",
       user: req.user,
     });
   } catch (error) {
-    console.error("error while getting user profile", error);
+    console.error("Error Checking User Authenticated Or Not", error);
     return res.status(500).json({
-      error: "error getting user",
+      error: "Error Checking User Authenticated Or Not",
     });
   }
 };
