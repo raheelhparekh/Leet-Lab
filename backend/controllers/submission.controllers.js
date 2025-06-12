@@ -1,5 +1,6 @@
 import { db } from "../src/libs/db.js";
 
+// get all submissions of user
 export const getAllSubmissionsForUser = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -28,6 +29,7 @@ export const getAllSubmissionsForUser = async (req, res) => {
   }
 };
 
+// get all submissions of user for this problem
 export const getSubmissionForProblem = async (req, res) => {
   try {
     const problemId = req.params.id;
@@ -59,6 +61,7 @@ export const getSubmissionForProblem = async (req, res) => {
   }
 };
 
+// get all submissions for this problem count -> includes all users
 export const getAllSubmissionsForProblem = async (req, res) => {
   try {
     const problemId = req.params.problemId;
