@@ -5,7 +5,7 @@ function LogoutButton({ children }) {
   const { logout } = useAuthStore();
 
   const onLogout = async () => {
-    await logout;
+    await logout();
     console.log("logged out")
   };
 
