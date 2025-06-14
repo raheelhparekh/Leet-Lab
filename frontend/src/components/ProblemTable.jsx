@@ -3,63 +3,69 @@ import { useAuthStore } from "../store/useAuthStore";
 import { Link } from "react-router-dom";
 import { Bookmark, PencilIcon, Trash, TrashIcon, Plus } from "lucide-react";
 import { useAction } from "../store/useAction.js";
+import { usePlaylistStore } from "../store/usePlaylistStore.js";
+import AddToPlaylistModel from "./AddToPlaylistModel.jsx";
+import CreatePlaylistModel from "./CreatePlaylistModel.jsx";
 
-function ProblemTable({ problems }) {
+
+const ProblemTable = ({ problems }) => {
   const { authUser } = useAuthStore();
+  const { onDeleteProblem } = useAction();
+  const { createPlaylist } = usePlaylistStore();
   const [search, setSearch] = useState("");
   const [difficulty, setDifficulty] = useState("ALL");
   const [selectedTag, setSelectedTag] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
-  const {
-    onDeleteProblem,
-    onUpdateProblem,
-  } = useAction();
+  const [selectedProblemId, setSelectedProblemId] = useState(null);
+  const [isCreateModelOpen, setIsCreateModelOpen] = useState(false);
+  const [isAddToPlaylistModelOpen, setIsAddToPlaylistModelOpen] = useState(false);
 
-  const difficulties = ["EASY", "MEDIUM", "HARD"];
-
+  // Extract all unique tags from problems
   const allTags = useMemo(() => {
     if (!Array.isArray(problems)) return [];
-
     const tagsSet = new Set();
-
     problems.forEach((p) => p.tags?.forEach((t) => tagsSet.add(t)));
     return Array.from(tagsSet);
   }, [problems]);
 
+  // Define allowed difficulties
+  const difficulties = ["EASY", "MEDIUM", "HARD"];
+
+  // Filter problems based on search, difficulty, and tags
   const filteredProblems = useMemo(() => {
     return (problems || [])
       .filter((problem) =>
-        problem.title.toLowerCase().includes(search.toLowerCase()),
+        problem.title.toLowerCase().includes(search.toLowerCase())
       )
       .filter((problem) =>
-        difficulty === "ALL" ? true : problem.difficulty === difficulty,
+        difficulty === "ALL" ? true : problem.difficulty === difficulty
       )
       .filter((problem) =>
-        selectedTag === "ALL" ? true : problem.tags?.includes(selectedTag),
+        selectedTag === "ALL" ? true : problem.tags?.includes(selectedTag)
       );
   }, [problems, search, difficulty, selectedTag]);
 
-  const itemsPerPage = 2;
+  // Pagination logic
+  const itemsPerPage = 5;
   const totalPages = Math.ceil(filteredProblems.length / itemsPerPage);
   const paginatedProblems = useMemo(() => {
     return filteredProblems.slice(
       (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage,
+      currentPage * itemsPerPage
     );
   }, [filteredProblems, currentPage]);
 
-  const handleDelete = (problemId) => {
-    onDeleteProblem(problemId);
+  const handleDelete = (id) => {
+    onDeleteProblem(id);
   };
 
-  //TODO: will come back to this later
-  const handleUpdate=(problemId) =>{
-    onUpdateProblem(problemId)
-  }
+  const handleCreatePlaylist = async (data) => {
+    await createPlaylist(data);
+  };
 
-  const handleAddToPlaylist = async (problemId) => {
-    console.log(problemId);
-    console.log("clicked");
+  const handleAddToPlaylist = (problemId) => {
+    setSelectedProblemId(problemId);
+    setIsAddToPlaylistModelOpen(true);
   };
 
   return (
@@ -67,7 +73,10 @@ function ProblemTable({ problems }) {
       {/* Header with Create Playlist Button */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Problems</h2>
-        <button className="btn btn-primary gap-2" onClick={() => {}}>
+        <button
+          className="btn btn-primary gap-2"
+          onClick={() => setIsCreateModelOpen(true)}
+        >
           <Plus className="w-4 h-4" />
           Create Playlist
         </button>
@@ -109,22 +118,22 @@ function ProblemTable({ problems }) {
       </div>
 
       {/* Table */}
-      <div className="overflow x-auto rounded-xl shadow-md">
-        <table className="table table-zebra table-lg bg-base-200, text-base-content">
-          <thead className="bg-base-200">
+      <div className="overflow-x-auto rounded-xl shadow-md">
+        <table className="table table-zebra table-lg bg-base-200 text-base-content">
+          <thead className="bg-base-300">
             <tr>
               <th>Solved</th>
               <th>Title</th>
               <th>Tags</th>
               <th>Difficulty</th>
-              <th>Action</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {paginatedProblems.length > 0 ? (
               paginatedProblems.map((problem) => {
-                const isSolved = problem.solvedBy?.some(
-                  (user) => user.userId === authUser?.id,
+                const isSolved = problem.solvedBy.some(
+                  (user) => user.userId === authUser?.id
                 );
                 return (
                   <tr key={problem.id}>
@@ -137,10 +146,7 @@ function ProblemTable({ problems }) {
                       />
                     </td>
                     <td>
-                      <Link
-                        to={`/problem/${problem.id}`}
-                        className="font-semibold hover:underline"
-                      >
+                      <Link to={`/problem/${problem.id}`} className="font-semibold hover:underline">
                         {problem.title}
                       </Link>
                     </td>
@@ -179,10 +185,7 @@ function ProblemTable({ problems }) {
                             >
                               <TrashIcon className="w-4 h-4 text-white" />
                             </button>
-                            <button
-                            //   onClick={() => handleUpdate(problem.id)}
-                              className="btn btn-sm btn-warning"
-                            >
+                            <button disabled className="btn btn-sm btn-warning">
                               <PencilIcon className="w-4 h-4 text-white" />
                             </button>
                           </div>
@@ -192,9 +195,7 @@ function ProblemTable({ problems }) {
                           onClick={() => handleAddToPlaylist(problem.id)}
                         >
                           <Bookmark className="w-4 h-4" />
-                          <span className="hidden sm:inline">
-                            Save to Playlist
-                          </span>
+                          <span className="hidden sm:inline">Save to Playlist</span>
                         </button>
                       </div>
                     </td>
@@ -203,8 +204,8 @@ function ProblemTable({ problems }) {
               })
             ) : (
               <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-500 ">
-                  No problems found
+                <td colSpan={5} className="text-center py-6 text-gray-500">
+                  No problems found.
                 </td>
               </tr>
             )}
@@ -232,8 +233,21 @@ function ProblemTable({ problems }) {
           Next
         </button>
       </div>
+
+      {/* Modals */}
+      <CreatePlaylistModel
+        isOpen={isCreateModelOpen}
+        onClose={() => setIsCreateModelOpen(false)}
+        onSubmit={handleCreatePlaylist}
+      />
+      
+      <AddToPlaylistModel
+        isOpen={isAddToPlaylistModelOpen}
+        onClose={() => setIsAddToPlaylistModelOpen(false)}
+        problemId={selectedProblemId}
+      />
     </div>
   );
-}
+};
 
 export default ProblemTable;
