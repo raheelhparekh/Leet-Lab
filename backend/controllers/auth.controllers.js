@@ -142,3 +142,26 @@ export const check = async (req, res) => {
     });
   }
 };
+
+export const getProfile = async(req,res)=>{
+  try {
+    const user=req.user;
+    if(!user){
+      return res.status(400).json({
+        error:"User not found"
+      })
+    }
+
+    return res.status(200).json({
+      message:"User profile fetched",
+      success:true,
+      user
+    })
+  } catch (error) {
+    console.error("Error occured fetching user profile", error)
+    return res.status(500).json({
+      error:"Error fetching user profile"
+    })
+    
+  }
+}

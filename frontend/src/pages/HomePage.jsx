@@ -9,7 +9,6 @@ function HomePage() {
   useEffect(() => {
     getAllProblems();
   }, [getAllProblems]);
-  console.log(problems);
 
   if (isProblemsLoading) {
     return (

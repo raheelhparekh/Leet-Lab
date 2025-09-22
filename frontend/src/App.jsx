@@ -13,6 +13,7 @@ import AdminRoute from "./components/AdminRoute.jsx";
 import AddProblem from "./pages/AddProblem.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import ProblemPage from "./pages/ProblemPage.jsx";
+import PlaylistPage from "./pages/PlaylistPage.jsx";
 
 function App() {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
@@ -56,6 +57,11 @@ function App() {
           <Route
             path="/problem/:id"
             element={<ProblemPage /> }
+          />
+
+          <Route
+            path="/playlist/:id"
+            element={<PlaylistPage /> }
           />
 
           <Route element={<AdminRoute />}>

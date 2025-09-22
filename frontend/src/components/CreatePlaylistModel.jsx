@@ -1,7 +1,10 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { X } from "lucide-react";
-const CreatePlaylistModel = ({ isOpen, onClose, onSubmit }) => {
+import { usePlaylistStore } from "../store/usePlaylistStore";
+
+const CreatePlaylistModel = ({ isOpen, onClose }) => {
+  const { createPlaylist, isLoading } = usePlaylistStore();
   const {
     register,
     handleSubmit,
@@ -10,9 +13,13 @@ const CreatePlaylistModel = ({ isOpen, onClose, onSubmit }) => {
   } = useForm();
 
   const handleFormSubmit = async (data) => {
-    await onSubmit(data);
-    reset();
-    onClose();
+    try {
+      await createPlaylist(data);
+      reset();
+      onClose();
+    } catch (error) {
+      console.error("Error creating playlist:", error);
+    }
   };
 
   if (!isOpen) return null;
@@ -65,8 +72,12 @@ const CreatePlaylistModel = ({ isOpen, onClose, onSubmit }) => {
             <button type="button" onClick={onClose} className="btn btn-ghost">
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
-              Create Playlist
+            <button 
+              type="submit" 
+              className={`btn btn-primary ${isLoading ? "loading" : ""}`}
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating..." : "Create Playlist"}
             </button>
           </div>
         </form>
