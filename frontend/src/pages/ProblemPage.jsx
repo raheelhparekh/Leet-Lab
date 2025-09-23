@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import {
@@ -15,6 +16,8 @@ import {
   Users,
   ThumbsUp,
   Home,
+  Send,
+  Plus,
 } from "lucide-react";
 import Submission from "../components/Submission";
 import SubmissionsList from "../components/SubmissionsList";
@@ -22,25 +25,28 @@ import { Link, useParams } from "react-router-dom";
 
 import { useProblemStore } from "../store/useProblemStore.js";
 import { useExecutionStore } from "../store/useExecutionStore.js";
-import { getJudge0LanguageId } from "../lib/language.js";
 import { useSubmissionStore } from "../store/useSubmissionStore.js";
+import { getJudge0LanguageId } from "../lib/language.js";
+import AddToPlaylistModel from "../components/AddToPlaylistModel.jsx";
 
 function ProblemPage() {
   const { id } = useParams();
   const { getProblemById, problem, isProblemLoading } = useProblemStore();
   const { isExecutingCode, executeCode, submission } = useExecutionStore();
+  const { 
+    submitSolution, 
+    isLoading: isSubmitting,
+    getSubmissionForProblem,
+    getSubmissionCountForProblem,
+    submissionCount,
+    submission: submissions
+  } = useSubmissionStore();
   const [code, setCode] = useState("");
   const [activeTab, setActiveTab] = useState("description");
   const [selectedLanguage, setSelectedLanguage] = useState("JAVASCRIPT");
   const [isBookMarked, setIsBookMarked] = useState(false);
   const [testCases, setTestCases] = useState([]);
-  const {
-    submission: submissions,
-    isLoading: isSubmissionsLoading,
-    getSubmissionForProblem,
-    getSubmissionCountForProblem,
-    submissionCount,
-  } = useSubmissionStore();
+  const [showAddToPlaylist, setShowAddToPlaylist] = useState(false);
 
   useEffect(() => {
     getProblemById(id);
@@ -82,6 +88,20 @@ function ProblemPage() {
       executeCode(code, language_id, stdin, expected_outputs, id);
     } catch (error) {
       console.log("Error executing code", error);
+    }
+  };
+
+  const handleSubmitSolution = async (e) => {
+    e.preventDefault();
+    try {
+      const language_id = getJudge0LanguageId(selectedLanguage);
+      await submitSolution(id, code, language_id);
+      // Refresh submissions if we're on the submissions tab
+      if (activeTab === "submissions") {
+        getSubmissionForProblem(id);
+      }
+    } catch (error) {
+      console.log("Error submitting solution", error);
     }
   };
 
@@ -160,7 +180,7 @@ function ProblemPage() {
         return (
           <SubmissionsList
             submissions={submissions}
-            isLoading={isSubmissionsLoading}
+            isLoading={isSubmitting}
           />
         );
       case "discussion":
@@ -191,7 +211,7 @@ function ProblemPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-base-300 to base-200">
+    <div className="min-h-screen bg-gradient-to-br from-base-300 to-base-200">
       <nav className="navbar bg-base-100 shadow-lg px-4">
         <div className="flex-1 gap-2">
           <Link to={"/"} className="flex items-center gap-2 text-primary">
@@ -221,10 +241,17 @@ function ProblemPage() {
         </div>
         <div className="flex-none gap-4">
           <button
-          // className={`btn btn-ghost btn-circle ${
-          //   isBookmarked ? "text-primary" : ""
-          // }`}
-          // onClick={() => setIsBookmarked(!isBookmarked)}
+            className="btn btn-ghost btn-circle"
+            onClick={() => setShowAddToPlaylist(true)}
+            title="Add to Playlist"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+          <button
+            className={`btn btn-ghost btn-circle ${
+              isBookMarked ? "text-primary" : ""
+            }`}
+            onClick={() => setIsBookMarked(!isBookMarked)}
           >
             <Bookmark className="w-5 h-5" />
           </button>
@@ -332,10 +359,17 @@ function ProblemPage() {
                     disabled={isExecutingCode}
                   >
                     {!isExecutingCode && <Play className="w-4 h-4" />}
-                    Run Code
+                    {isExecutingCode ? "Running..." : "Run Code"}
                   </button>
-                  <button className="btn btn-success gap-2">
-                    Submit Solution
+                  <button 
+                    className={`btn btn-success gap-2 ${
+                      isSubmitting ? "loading" : ""
+                    }`}
+                    onClick={handleSubmitSolution}
+                    disabled={isSubmitting || isExecutingCode}
+                  >
+                    {!isSubmitting && <Send className="w-4 h-4" />}
+                    {isSubmitting ? "Submitting..." : "Submit Solution"}
                   </button>
                 </div>
               </div>
@@ -375,6 +409,15 @@ function ProblemPage() {
           </div>
         </div>
       </div>
+
+      {/* Add to Playlist Modal */}
+      {showAddToPlaylist && (
+        <AddToPlaylistModel 
+          isOpen={showAddToPlaylist}
+          onClose={() => setShowAddToPlaylist(false)}
+          problemId={id}
+        />
+      )}
     </div>
   );
 }
