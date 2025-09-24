@@ -13,10 +13,10 @@ import {
   Lightbulb,
 } from "lucide-react";
 import Editor from "@monaco-editor/react";
-import { useState } from "react";
-import { axiosInstance } from "../lib/axios";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { useProblemStore } from "../store/useProblemStore";
 
 const ProblemSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -512,7 +512,12 @@ public class Main {
 };
 
 function CreateProblemForm() {
-  const navigation = useNavigate();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editProblemId = searchParams.get('edit');
+  const isEditMode = Boolean(editProblemId);
+  const { getProblemById, problem, updateProblem, createProblem } = useProblemStore();
+  
   const {
     register,
     control,
@@ -565,6 +570,51 @@ function CreateProblemForm() {
     name: "tags",
   });
 
+  // Load problem data if in edit mode
+  useEffect(() => {
+    if (isEditMode && editProblemId) {
+      getProblemById(editProblemId);
+    }
+  }, [isEditMode, editProblemId, getProblemById]);
+
+  // Reset form with problem data when editing
+  useEffect(() => {
+    if (isEditMode && problem && problem.id === editProblemId) {
+      reset({
+        title: problem.title,
+        description: problem.description,
+        difficulty: problem.difficulty,
+        tags: problem.tags || [],
+        constraints: problem.constraints,
+        hints: problem.hints || "",
+        editorial: problem.editorial || "",
+        testCases: problem.testCases || [{ input: "", output: "" }],
+        examples: problem.examples || {
+          JAVASCRIPT: { input: "", output: "", explanation: "" },
+          PYTHON: { input: "", output: "", explanation: "" },
+          CPP: { input: "", output: "", explanation: "" },
+          JAVA: { input: "", output: "", explanation: "" },
+        },
+        codeSnippets: problem.codeSnippets || {
+          JAVASCRIPT: "function solution() {\n  // Your code here\n}",
+          PYTHON: "def solution():\n    # Your code here",
+          CPP: "#include <iostream>\nusing namespace std;\n\nvoid solution(string args[]) {\n    // Your code here\n}",
+          JAVA: "public class Solution {\n    public static void main(String args[]) {\n        // Your code here\n    }\n}",
+        },
+        referenceSolutions: problem.referenceSolutions || {
+          JAVASCRIPT: "// JavaScript solution here",
+          PYTHON: " # Python solution here",
+          CPP: " // C++ solution here",
+          JAVA: " // Java solution here",
+        },
+      });
+      
+      // Update field arrays
+      replaceTags(problem.tags?.map(tag => tag) || []);
+      replaceTestCases(problem.testCases || [{ input: "", output: "" }]);
+    }
+  }, [isEditMode, problem, editProblemId, reset, replaceTags, replaceTestCases]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [sampleType, setSampleType] = useState("DP");
 
@@ -579,18 +629,23 @@ function CreateProblemForm() {
 
   const onSubmit = async (value) => {
     try {
-    console.log(value)
+      console.log(value)
       setIsLoading(true);
-      const response = await axiosInstance.post(
-        "problems/create-problem",
-        value,
-      );
-      console.log(response.data);
-      toast.success(response.data.message || "Problem created succesfully !!");
-      navigation("/");
+      
+      if (isEditMode && editProblemId) {
+        // Update existing problem
+        await updateProblem(editProblemId, value);
+        toast.success("Problem updated successfully!");
+      } else {
+        // Create new problem
+        await createProblem(value);
+        toast.success("Problem created successfully!");
+      }
+      
+      navigate("/");
     } catch (error) {
-      console.error("Error creating problem ", error);
-      toast.error("Error creating Problem");
+      console.error("Error saving problem ", error);
+      toast.error(isEditMode ? "Error updating problem" : "Error creating problem");
     } finally {
       setIsLoading(false);
     }
@@ -603,7 +658,7 @@ function CreateProblemForm() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 pb-4 border-b">
             <h2 className="card-title text-2xl md:text-3xl flex items-center gap-3">
               <FileText className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-              Create Problem
+              {isEditMode ? 'Edit Problem' : 'Create Problem'}
             </h2>
 
             <div className="flex flex-col md:flex-row gap-3 mt-4 md:mt-0">
@@ -1050,7 +1105,7 @@ function CreateProblemForm() {
                 ) : (
                   <>
                     <CheckCircle2 className="w-5 h-5" />
-                    Create Problem
+                    {isEditMode ? 'Update Problem' : 'Create Problem'}
                   </>
                 )}
               </button>

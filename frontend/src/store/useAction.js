@@ -6,28 +6,36 @@ export const useAction = create((set) => ({
   isDeletingProblem: false,
   isUpdatingProblem: false,
 
-  onDeleteProblem: async (problemId) => {
+  onDeleteProblem: async (problemId, refreshCallback) => {
     try {
       set({ isDeletingProblem: true });
       const response = await axiosInstance.delete(`/problems/delete-problem/${problemId}`);
-      //   console.log(response);
-      toast.success(response.data.message || "Problem deleted succesfully");
+      toast.success(response.data.message || "Problem deleted successfully");
+      
+      // Call the refresh callback if provided
+      if (refreshCallback) {
+        refreshCallback();
+      }
     } catch (error) {
-      console.log("Error occured while deleting problem", error);
+      console.log("Error occurred while deleting problem", error);
       toast.error("Could not delete problem");
     } finally {
       set({ isDeletingProblem: false });
     }
   },
 
-  onUpdateProblem:async(problemId)=>{
+  onUpdateProblem:async(problemId, refreshCallback)=>{
     try {
       set({ isUpdatingProblem: true });
       const response = await axiosInstance.put(`/problems/update-problem/${problemId}`);
-      //   console.log(response);
-      toast.success(response.data.message || "Problem updated succesfully");
+      toast.success(response.data.message || "Problem updated successfully");
+      
+      // Call the refresh callback if provided
+      if (refreshCallback) {
+        refreshCallback();
+      }
     } catch (error) {
-      console.log("Error occured while updating problem", error);
+      console.log("Error occurred while updating problem", error);
       toast.error("Could not update problem");
     } finally {
       set({ isUpdatingProblem: false });

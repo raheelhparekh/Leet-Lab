@@ -8,7 +8,7 @@ import AddToPlaylistModel from "./AddToPlaylistModel.jsx";
 import CreatePlaylistModel from "./CreatePlaylistModel.jsx";
 
 
-const ProblemTable = ({ problems }) => {
+const ProblemTable = ({ problems, onRefresh }) => {
   const { authUser } = useAuthStore();
   const { onDeleteProblem } = useAction();
   const { createPlaylist } = usePlaylistStore();
@@ -55,8 +55,10 @@ const ProblemTable = ({ problems }) => {
     );
   }, [filteredProblems, currentPage]);
 
-  const handleDelete = (id) => {
-    onDeleteProblem(id);
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this problem?")) {
+      await onDeleteProblem(id, onRefresh);
+    }
   };
 
   const handleCreatePlaylist = async (data) => {
@@ -185,9 +187,12 @@ const ProblemTable = ({ problems }) => {
                             >
                               <TrashIcon className="w-4 h-4 text-white" />
                             </button>
-                            <button disabled className="btn btn-sm btn-warning">
+                            <Link 
+                              to={`/add-problem?edit=${problem.id}`}
+                              className="btn btn-sm btn-warning"
+                            >
                               <PencilIcon className="w-4 h-4 text-white" />
-                            </button>
+                            </Link>
                           </div>
                         )}
                         <button

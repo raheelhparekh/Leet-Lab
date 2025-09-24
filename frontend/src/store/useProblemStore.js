@@ -7,7 +7,7 @@ export const useProblemStore = create((set) => ({
   problem: null,
   isProblemsLoading: false,
   isProblemLoading: false,
-  isSolvedProblemsLoading:false,
+  isSolvedProblemsLoading: false,
   solvedProblems: [],
 
   getAllProblems: async () => {
@@ -39,16 +39,76 @@ export const useProblemStore = create((set) => ({
     }
   },
 
-  getSolvedProblems: async () => {
+  getAllSolvedProblemsByUser: async () => {
     try {
-      set({isSolvedProblemsLoading:true})
-      const response = await axiosInstance.get(`/problems//get-all-solved-problems-by-user`);
+      set({ isSolvedProblemsLoading: true });
+      const response = await axiosInstance.get(`/problems/get-all-solved-problems-by-user`);
       set({ solvedProblems: response.data.problem });
     } catch (error) {
       console.log("Error fetching all solved problems by user", error);
       toast.error("Error fetching all solved problems by user");
-    } finally{
-        set({isSolvedProblemsLoading:false})
+    } finally {
+      set({ isSolvedProblemsLoading: false });
+    }
+  },
+
+  createProblem: async (problemData) => {
+    try {
+      set({ isProblemsLoading: true });
+      const response = await axiosInstance.post("/problems/create-problem", problemData);
+      
+      set((state) => ({
+        problems: [...state.problems, response.data.problem]
+      }));
+      
+      toast.success("Problem created successfully!");
+      return response.data.problem;
+    } catch (error) {
+      console.log("Error creating problem", error);
+      toast.error(error.response?.data?.error || "Error creating problem");
+      throw error;
+    } finally {
+      set({ isProblemsLoading: false });
+    }
+  },
+
+  updateProblem: async (problemId, problemData) => {
+    try {
+      set({ isProblemsLoading: true });
+      const response = await axiosInstance.put(`/problems/update-problem/${problemId}`, problemData);
+      
+      set((state) => ({
+        problems: state.problems.map(p => p.id === problemId ? response.data.problem : p),
+        problem: response.data.problem
+      }));
+      
+      toast.success("Problem updated successfully!");
+      return response.data.problem;
+    } catch (error) {
+      console.log("Error updating problem", error);
+      toast.error(error.response?.data?.error || "Error updating problem");
+      throw error;
+    } finally {
+      set({ isProblemsLoading: false });
+    }
+  },
+
+  deleteProblem: async (problemId) => {
+    try {
+      set({ isProblemsLoading: true });
+      await axiosInstance.delete(`/problems/delete-problem/${problemId}`);
+      
+      set((state) => ({
+        problems: state.problems.filter(p => p.id !== problemId)
+      }));
+      
+      toast.success("Problem deleted successfully!");
+    } catch (error) {
+      console.log("Error deleting problem", error);
+      toast.error(error.response?.data?.error || "Error deleting problem");
+      throw error;
+    } finally {
+      set({ isProblemsLoading: false });
     }
   },
 }));

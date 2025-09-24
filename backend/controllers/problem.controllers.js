@@ -162,12 +162,12 @@ export const deleteProblem = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Problem deleted succesfully",
+      message: "Problem deleted successfully",
     });
   } catch (error) {
-    console.error("Error occured while deleting the problem", error);
+    console.error("Error occurred while deleting the problem", error);
     return res.status(501).json({
-      error: "Error occured while deleting the problem",
+      error: "Error occurred while deleting the problem",
     });
   }
 };
@@ -246,36 +246,36 @@ export const updateProblem = async (req, res) => {
           });
         }
       }
-
-      // save problem in database
-      const newProblem = await db.problem.update({
-        where: {
-          id: problemId,
-        },
-        data: {
-          title,
-          description,
-          difficulty,
-          tags,
-          examples,
-          constraints,
-          hints,
-          editorial,
-          testCases,
-          codeSnippets,
-          referenceSolutions,
-          userId: req.user.id,
-        },
-      });
-
-      return res.status(201).json({
-        success: true,
-        message: "Problem updated successfully",
-        problem: newProblem,
-      });
     }
+
+    // save problem in database after all test validations pass
+    const newProblem = await db.problem.update({
+      where: {
+        id: problemId,
+      },
+      data: {
+        title,
+        description,
+        difficulty,
+        tags,
+        examples,
+        constraints,
+        hints,
+        editorial,
+        testCases,
+        codeSnippets,
+        referenceSolutions,
+        userId: req.user.id,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Problem updated successfully",
+      problem: newProblem,
+    });
   } catch (error) {
-    console.error(" error occured while updating the problem", error);
+    console.error(" error occurred while updating the problem", error);
     return res.status(501).json({
       error: "Some error occurred while updating the problem",
     });
